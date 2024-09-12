@@ -1,4 +1,4 @@
-FROM ubuntu:bionic-20220427 as builder
+FROM ubuntu:jammy as builder
 
 WORKDIR /work
 
@@ -17,9 +17,9 @@ RUN apt-get update \
         udev \
         libplist++-dev libtool autoconf automake \
         python3 python3-dev \
-        curl usbmuxd \
+        curl usbmuxd  libcurl4-openssl-dev \
         wget lsb-release wget software-properties-common \
-        clang-10
+        clang
 
 RUN for i in /etc/ssl/certs/*.pem; do HASH=$(openssl x509 -hash -noout -in $i); ln -s $(basename $i) /etc/ssl/certs/$HASH.0 || true; done
 
@@ -32,8 +32,8 @@ RUN . "$HOME/.cargo/env" && cargo install cargo-chef
 RUN git clone https://github.com/zeyugao/zeroconf-rs.git \
     && git clone https://github.com/jkcoxson/mdns.git
 
-RUN cd zeroconf-rs && git checkout 860b030064308d4318e2c6936886674d955c6472 && cd .. \
-    && cd mdns && git checkout 961ab21b5e01143dc3a7f0ba5f654285634e5569 && cd ..
+#RUN cd zeroconf-rs && git checkout 860b030064308d4318e2c6936886674d955c6472 && cd .. \
+#    && cd mdns && git checkout 961ab21b5e01143dc3a7f0ba5f654285634e5569 && cd ..
 
 RUN mkdir netmuxd
 COPY Cargo.toml netmuxd
@@ -60,3 +60,5 @@ RUN apt-get update \
         libavahi-client-dev
 
 COPY --from=builder /output/ /usr/local/bin/
+
+COPY --from=builder /output/ .
